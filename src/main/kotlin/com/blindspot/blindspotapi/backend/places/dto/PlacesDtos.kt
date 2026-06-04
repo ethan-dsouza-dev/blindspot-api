@@ -36,10 +36,27 @@ data class PlaceResult(
     val rating: Double? = null,
     val priceLevel: String? = null,
     val editorialSummary: LocalizedText? = null,
+    val types: List<String>? = null,
+    val photos: List<Photo>? = null,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class LocalizedText(
     val text: String? = null,
     val languageCode: String? = null,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Photo(
+    val name: String? = null,
+    val heightPx: Int? = null,
+    val widthPx: Int? = null,
+    val authorAttributions: List<AuthorAttribution>? = null,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class AuthorAttribution(
+    val displayName: String? = null,
+    val uri: String? = null,
+    val photoUri: String? = null,
 )

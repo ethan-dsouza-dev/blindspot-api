@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 
-class BarServiceTest {
+class PlaceServiceTest {
 
     private val client = mock(GooglePlacesClient::class.java)
     private val service = BarService(client)
@@ -30,6 +30,7 @@ class BarServiceTest {
             rating = 4.1,
             priceLevel = "PRICE_LEVEL_EXPENSIVE",
             editorialSummary = LocalizedText(text = "A distant watering hole"),
+            types = listOf("bar", "night_club"),
         )
         val near = PlaceResult(
             id = "near",
@@ -38,6 +39,7 @@ class BarServiceTest {
             rating = 4.8,
             priceLevel = "PRICE_LEVEL_MODERATE",
             editorialSummary = LocalizedText(text = "Right around the corner"),
+            types = listOf("bar"),
         )
 
         `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
@@ -51,7 +53,8 @@ class BarServiceTest {
         val nearBar = result[0]
         assertEquals("Near Bar", nearBar.name)
         assertEquals(4.8, nearBar.rating)
-        assertEquals(2, nearBar.pricePoint)
+        assertEquals(2, nearBar.priceLevel)
+        assertEquals("bar", nearBar.category)
         assertEquals("Right around the corner", nearBar.description)
     }
 
@@ -89,7 +92,8 @@ class BarServiceTest {
 
         assertEquals("Unknown", bar.name)
         assertNull(bar.rating)
-        assertNull(bar.pricePoint)
+        assertNull(bar.priceLevel)
+        assertEquals("bar", bar.category)
         assertNull(bar.description)
     }
 }

@@ -9,7 +9,7 @@ import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/bars")
-class BarController(
+class PlacesNearbyController(
     private val barService: BarService,
 ) {
 
@@ -18,7 +18,7 @@ class BarController(
         @RequestParam lat: Double,
         @RequestParam lng: Double,
         @RequestParam(required = false, defaultValue = "1500.0") radius: Double,
-    ): List<Bar> {
+    ): List<Place> {
         if (lat < -90.0 || lat > 90.0) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "lat must be between -90 and 90")
         }

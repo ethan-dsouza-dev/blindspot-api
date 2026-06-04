@@ -20,7 +20,7 @@ class GooglePlacesClient(
     companion object {
         private const val SEARCH_NEARBY_PATH = "/v1/places:searchNearby"
         private const val FIELD_MASK =
-            "places.id,places.displayName,places.location,places.rating,places.priceLevel,places.editorialSummary"
+            "places.id,places.displayName,places.location,places.rating,places.priceLevel,places.editorialSummary,places.types,places.photos"
         private const val MAX_RESULT_COUNT = 20
     }
 

@@ -2,12 +2,8 @@ package com.blindspot.blindspotapi.backend.bars
 
 import com.blindspot.blindspotapi.backend.places.GooglePlacesClient
 import com.blindspot.blindspotapi.backend.places.dto.PlaceResult
+import com.blindspot.blindspotapi.backend.utils.haversineMeters
 import org.springframework.stereotype.Service
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 @Service
 class BarService(
@@ -15,8 +11,6 @@ class BarService(
 ) {
 
     companion object {
-        private const val EARTH_RADIUS_METERS = 6_371_000.0
-
         private val PRICE_LEVELS = mapOf(
             "PRICE_LEVEL_FREE" to 0,
             "PRICE_LEVEL_INEXPENSIVE" to 1,
@@ -26,7 +20,7 @@ class BarService(
         )
     }
 
-    fun findNearbyBars(latitude: Double, longitude: Double, radiusMeters: Double): List<Bar> {
+    fun findNearbyBars(latitude: Double, longitude: Double, radiusMeters: Double): List<Place> {
         val response = googlePlacesClient.searchNearbyBars(latitude, longitude, radiusMeters)
 
         return response.places
@@ -34,27 +28,20 @@ class BarService(
             .sortedBy { it.distanceMeters }
     }
 
-    private fun toBar(place: PlaceResult, originLat: Double, originLng: Double): Bar? {
+    private fun toBar(place: PlaceResult, originLat: Double, originLng: Double): Place? {
         val location = place.location ?: return null
 
-        return Bar(
+        return Place(
             id = place.id,
             name = place.displayName?.text ?: "Unknown",
+            description = place.editorialSummary?.text,
+            category = place.types?.firstOrNull() ?: "",
             latitude = location.latitude,
             longitude = location.longitude,
-            description = place.editorialSummary?.text,
+            imageUrl = null,
             rating = place.rating,
-            pricePoint = place.priceLevel?.let { PRICE_LEVELS[it] },
+            priceLevel = place.priceLevel?.let { PRICE_LEVELS[it] },
             distanceMeters = haversineMeters(originLat, originLng, location.latitude, location.longitude),
         )
-    }
-
-    private fun haversineMeters(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLng = Math.toRadians(lng2 - lng1)
-        val a = sin(dLat / 2).pow(2) +
-            cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(dLng / 2).pow(2)
-        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        return EARTH_RADIUS_METERS * c
     }
 }

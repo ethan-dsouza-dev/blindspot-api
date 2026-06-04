@@ -10,8 +10,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 
-@WebMvcTest(BarController::class)
-class BarControllerTest {
+@WebMvcTest(PlacesNearbyController::class)
+class PlaceControllerTest {
 
     @Autowired
     lateinit var mockMvc: MockMvc
@@ -24,14 +24,14 @@ class BarControllerTest {
         whenever(barService.findNearbyBars(eq(37.7749), eq(-122.4194), eq(1500.0)))
             .thenReturn(
                 listOf(
-                    Bar(
+                    Place(
                         id = "near",
                         name = "Near Bar",
                         latitude = 37.775,
                         longitude = -122.4194,
                         description = "Around the corner",
                         rating = 4.8,
-                        pricePoint = 2,
+                        priceLevel = 2,
                         distanceMeters = 11.1,
                     ),
                 ),
@@ -44,7 +44,7 @@ class BarControllerTest {
             status { isOk() }
             jsonPath("$[0].id") { value("near") }
             jsonPath("$[0].name") { value("Near Bar") }
-            jsonPath("$[0].pricePoint") { value(2) }
+            jsonPath("$[0].price_level") { value(2) }
             jsonPath("$[0].distanceMeters") { value(11.1) }
         }
     }
