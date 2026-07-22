@@ -18,6 +18,7 @@ class PlacesNearbyController(
         @RequestParam lat: Double,
         @RequestParam lng: Double,
         @RequestParam(required = false, defaultValue = "1500.0") radius: Double,
+        @RequestParam(required = false) priceLevel: Int? = null,
     ): List<Place> {
         if (lat < -90.0 || lat > 90.0) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "lat must be between -90 and 90")
@@ -28,7 +29,10 @@ class PlacesNearbyController(
         if (radius <= 0.0) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "radius must be greater than 0")
         }
+        if (priceLevel != null && (priceLevel < 1 || priceLevel > 4)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "priceLevel must be between 1 and 4")
+        }
 
-        return barService.findNearbyBars(lat, lng, radius)
+        return barService.findNearbyBars(lat, lng, radius, priceLevel)
     }
 }

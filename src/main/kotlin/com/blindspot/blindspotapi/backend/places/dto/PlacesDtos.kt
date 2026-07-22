@@ -1,12 +1,15 @@
 package com.blindspot.blindspotapi.backend.places.dto
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class SearchNearbyRequest(
     val includedTypes: List<String>,
     val maxResultCount: Int,
     val rankPreference: String,
     val locationRestriction: LocationRestriction,
+    val priceLevels: List<String>? = null,
 )
 
 data class LocationRestriction(
