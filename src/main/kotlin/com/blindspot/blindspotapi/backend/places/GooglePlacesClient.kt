@@ -24,7 +24,12 @@ class GooglePlacesClient(
         private const val MAX_RESULT_COUNT = 20
     }
 
-    fun searchNearbyBars(latitude: Double, longitude: Double, radiusMeters: Double): SearchNearbyResponse {
+    fun searchNearbyBars(
+        latitude: Double,
+        longitude: Double,
+        radiusMeters: Double,
+        priceLevels: List<String>? = null,
+    ): SearchNearbyResponse {
         val request = SearchNearbyRequest(
             includedTypes = listOf("bar"),
             maxResultCount = MAX_RESULT_COUNT,
@@ -35,6 +40,7 @@ class GooglePlacesClient(
                     radius = radiusMeters,
                 ),
             ),
+            priceLevels = priceLevels?.takeIf { it.isNotEmpty() },
         )
 
         return googlePlacesRestClient.post()
