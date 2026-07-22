@@ -9,9 +9,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 
 class PlaceServiceTest {
@@ -100,22 +98,52 @@ class PlaceServiceTest {
     }
 
     @Test
-    fun `maps price level to google name and forwards it`() {
-        `when`(client.searchNearbyBars(eq(originLat), eq(originLng), eq(1500.0), eq(listOf("PRICE_LEVEL_EXPENSIVE"))))
-            .thenReturn(SearchNearbyResponse(places = emptyList()))
+    fun `filters places by price level`() {
+        val cheap = PlaceResult(
+            id = "cheap",
+            displayName = LocalizedText(text = "Cheap Bar"),
+            location = LatLng(latitude = 37.7750, longitude = -122.4194),
+            priceLevel = "PRICE_LEVEL_INEXPENSIVE",
+            types = listOf("bar"),
+        )
+        val pricey = PlaceResult(
+            id = "pricey",
+            displayName = LocalizedText(text = "Pricey Bar"),
+            location = LatLng(latitude = 37.8049, longitude = -122.4194),
+            priceLevel = "PRICE_LEVEL_EXPENSIVE",
+            types = listOf("bar"),
+        )
 
-        service.findNearbyBars(originLat, originLng, 1500.0, 3)
+        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+            .thenReturn(SearchNearbyResponse(places = listOf(pricey, cheap)))
 
-        verify(client).searchNearbyBars(originLat, originLng, 1500.0, listOf("PRICE_LEVEL_EXPENSIVE"))
+        val result = service.findNearbyBars(originLat, originLng, 1500.0, priceLevel = 1)
+
+        assertEquals(listOf("cheap"), result.map { it.id })
     }
 
     @Test
-    fun `passes null price level when none provided`() {
-        `when`(client.searchNearbyBars(eq(originLat), eq(originLng), eq(1500.0), eq(null)))
-            .thenReturn(SearchNearbyResponse(places = emptyList()))
+    fun `does not filter when price level is omitted`() {
+        val cheap = PlaceResult(
+            id = "cheap",
+            displayName = LocalizedText(text = "Cheap Bar"),
+            location = LatLng(latitude = 37.7750, longitude = -122.4194),
+            priceLevel = "PRICE_LEVEL_INEXPENSIVE",
+            types = listOf("bar"),
+        )
+        val pricey = PlaceResult(
+            id = "pricey",
+            displayName = LocalizedText(text = "Pricey Bar"),
+            location = LatLng(latitude = 37.8049, longitude = -122.4194),
+            priceLevel = "PRICE_LEVEL_EXPENSIVE",
+            types = listOf("bar"),
+        )
 
-        service.findNearbyBars(originLat, originLng, 1500.0, null)
+        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+            .thenReturn(SearchNearbyResponse(places = listOf(pricey, cheap)))
 
-        verify(client).searchNearbyBars(originLat, originLng, 1500.0, null)
+        val result = service.findNearbyBars(originLat, originLng, 1500.0)
+
+        assertEquals(listOf("cheap", "pricey"), result.map { it.id })
     }
 }

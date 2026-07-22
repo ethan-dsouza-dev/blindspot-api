@@ -18,8 +18,6 @@ class BarService(
             "PRICE_LEVEL_EXPENSIVE" to 3,
             "PRICE_LEVEL_VERY_EXPENSIVE" to 4,
         )
-
-        private val PRICE_LEVEL_NAMES = PRICE_LEVELS.entries.associate { (name, level) -> level to name }
     }
 
     fun findNearbyBars(
@@ -28,14 +26,11 @@ class BarService(
         radiusMeters: Double,
         priceLevel: Int? = null,
     ): List<Place> {
-        val priceLevelNames = priceLevel
-            ?.let { PRICE_LEVEL_NAMES[it] }
-            ?.let { listOf(it) }
-
-        val response = googlePlacesClient.searchNearbyBars(latitude, longitude, radiusMeters, priceLevelNames)
+        val response = googlePlacesClient.searchNearbyBars(latitude, longitude, radiusMeters)
 
         return response.places
             .mapNotNull { place -> toBar(place, latitude, longitude) }
+            .filter { priceLevel == null || it.priceLevel == priceLevel }
             .sortedBy { it.distanceMeters }
     }
 
