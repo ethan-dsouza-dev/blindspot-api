@@ -3,6 +3,7 @@ package com.blindspot.blindspotapi.backend.bars
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
@@ -21,7 +22,7 @@ class PlaceControllerTest {
 
     @Test
     fun `returns nearby bars as json`() {
-        whenever(barService.findNearbyBars(eq(37.7749), eq(-122.4194), eq(1500.0)))
+        whenever(barService.findNearbyBars(eq(37.7749), eq(-122.4194), eq(1500.0), isNull()))
             .thenReturn(
                 listOf(
                     Place(
@@ -45,13 +46,13 @@ class PlaceControllerTest {
             jsonPath("$[0].id") { value("near") }
             jsonPath("$[0].name") { value("Near Bar") }
             jsonPath("$[0].price_level") { value(2) }
-            jsonPath("$[0].distanceMeters") { value(11.1) }
+            jsonPath("$[0].distance_meters") { value(11.1) }
         }
     }
 
     @Test
     fun `uses default radius when not provided`() {
-        whenever(barService.findNearbyBars(any(), any(), eq(1500.0)))
+        whenever(barService.findNearbyBars(any(), any(), eq(1500.0), isNull()))
             .thenReturn(emptyList())
 
         mockMvc.get("/bars/nearby") {

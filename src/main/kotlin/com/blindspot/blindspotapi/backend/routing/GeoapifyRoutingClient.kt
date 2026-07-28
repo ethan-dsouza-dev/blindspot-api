@@ -15,7 +15,7 @@ class GeoapifyRoutingClient(
 
     companion object {
         private const val ROUTING_PATH = "/v1/routing"
-        private const val MODE = "walk"
+        private const val DEFAULT_MODE = "walk"
         private const val FORMAT = "json"
     }
 
@@ -24,6 +24,7 @@ class GeoapifyRoutingClient(
         originLng: Double,
         destLat: Double,
         destLng: Double,
+        mode: String = DEFAULT_MODE,
     ): GeoapifyRouteResult? {
         val waypoints = "$originLat,$originLng|$destLat,$destLng"
 
@@ -31,7 +32,7 @@ class GeoapifyRoutingClient(
             .uri { builder ->
                 builder.path(ROUTING_PATH)
                     .queryParam("waypoints", waypoints)
-                    .queryParam("mode", MODE)
+                    .queryParam("mode", mode)
                     .queryParam("format", FORMAT)
                     .queryParam("apiKey", properties.apiKey)
                     .build()

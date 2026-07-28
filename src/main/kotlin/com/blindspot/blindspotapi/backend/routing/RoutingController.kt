@@ -20,11 +20,12 @@ class RoutingController(
         @RequestParam originLng: Double,
         @RequestParam destLat: Double,
         @RequestParam destLng: Double,
+        @RequestParam(required = false, defaultValue = "walk") mode: String,
     ): RouteResponse {
         validateLatLng(originLat, originLng)
         validateLatLng(destLat, destLng)
 
-        return routingService.getRoute(originLat, originLng, destLat, destLng)
+        return routingService.getRoute(originLat, originLng, destLat, destLng, mode)
     }
 
     private fun validateLatLng(lat: Double, lng: Double) {

@@ -23,7 +23,7 @@ class RoutingControllerTest {
     @Test
     fun `returns route as json`() {
         whenever(
-            routingService.getRoute(eq(37.7749), eq(-122.4194), eq(37.7750), eq(-122.4180)),
+            routingService.getRoute(eq(37.7749), eq(-122.4194), eq(37.7750), eq(-122.4180), eq("walk")),
         ).thenReturn(
             RouteResponse(
                 polyline = "abc123",
@@ -82,7 +82,7 @@ class RoutingControllerTest {
 
     @Test
     fun `delegates to routing service with all params`() {
-        whenever(routingService.getRoute(any(), any(), any(), any()))
+        whenever(routingService.getRoute(any(), any(), any(), any(), any()))
             .thenReturn(RouteResponse(polyline = "", distanceMeters = 0.0, durationSeconds = 0.0))
 
         mockMvc.get("/routing/route") {
@@ -92,6 +92,41 @@ class RoutingControllerTest {
             param("destLng", "-122.4180")
         }.andExpect {
             status { isOk() }
+        }
+    }
+
+    @Test
+    fun `defaults mode to walk when not provided`() {
+        whenever(
+            routingService.getRoute(eq(37.7749), eq(-122.4194), eq(37.7750), eq(-122.4180), eq("walk")),
+        ).thenReturn(RouteResponse(polyline = "abc123", distanceMeters = 500.0, durationSeconds = 120.0))
+
+        mockMvc.get("/routing/route") {
+            param("originLat", "37.7749")
+            param("originLng", "-122.4194")
+            param("destLat", "37.7750")
+            param("destLng", "-122.4180")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.polyline") { value("abc123") }
+        }
+    }
+
+    @Test
+    fun `passes a custom mode request param through to the service`() {
+        whenever(
+            routingService.getRoute(eq(37.7749), eq(-122.4194), eq(37.7750), eq(-122.4180), eq("drive")),
+        ).thenReturn(RouteResponse(polyline = "xyz789", distanceMeters = 500.0, durationSeconds = 120.0))
+
+        mockMvc.get("/routing/route") {
+            param("originLat", "37.7749")
+            param("originLng", "-122.4194")
+            param("destLat", "37.7750")
+            param("destLng", "-122.4180")
+            param("mode", "drive")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.polyline") { value("xyz789") }
         }
     }
 }

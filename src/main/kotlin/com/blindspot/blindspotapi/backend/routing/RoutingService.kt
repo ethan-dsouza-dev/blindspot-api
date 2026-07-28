@@ -16,8 +16,9 @@ class RoutingService(
         originLng: Double,
         destLat: Double,
         destLng: Double,
+        mode: String = "walk",
     ): RouteResponse {
-        val route = geoapifyRoutingClient.getRoute(originLat, originLng, destLat, destLng)
+        val route = geoapifyRoutingClient.getRoute(originLat, originLng, destLat, destLng, mode)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No route found")
 
         val coordinates = route.geometry.flatten()

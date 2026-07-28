@@ -26,7 +26,7 @@ class RoutingServiceTest {
             GeoCoordinate(lat = 38.5, lon = -120.2),
             GeoCoordinate(lat = 43.252, lon = -126.453),
         )
-        `when`(client.getRoute(originLat, originLng, destLat, destLng))
+        `when`(client.getRoute(originLat, originLng, destLat, destLng, "walk"))
             .thenReturn(GeoapifyRouteResult(distance = 500.0, time = 120.0, geometry = listOf(leg)))
 
         val result = service.getRoute(originLat, originLng, destLat, destLng)
@@ -40,7 +40,7 @@ class RoutingServiceTest {
     fun `flattens multiple legs into a single polyline`() {
         val legOne = listOf(GeoCoordinate(lat = 38.5, lon = -120.2))
         val legTwo = listOf(GeoCoordinate(lat = 43.252, lon = -126.453))
-        `when`(client.getRoute(originLat, originLng, destLat, destLng))
+        `when`(client.getRoute(originLat, originLng, destLat, destLng, "walk"))
             .thenReturn(GeoapifyRouteResult(distance = 500.0, time = 120.0, geometry = listOf(legOne, legTwo)))
 
         val result = service.getRoute(originLat, originLng, destLat, destLng)
@@ -50,10 +50,21 @@ class RoutingServiceTest {
 
     @Test
     fun `throws not found when geoapify returns no route`() {
-        `when`(client.getRoute(originLat, originLng, destLat, destLng)).thenReturn(null)
+        `when`(client.getRoute(originLat, originLng, destLat, destLng, "walk")).thenReturn(null)
 
         assertThrows(ResponseStatusException::class.java) {
             service.getRoute(originLat, originLng, destLat, destLng)
         }
+    }
+
+    @Test
+    fun `passes a custom mode through to the geoapify client`() {
+        val leg = listOf(GeoCoordinate(lat = 38.5, lon = -120.2))
+        `when`(client.getRoute(originLat, originLng, destLat, destLng, "drive"))
+            .thenReturn(GeoapifyRouteResult(distance = 500.0, time = 120.0, geometry = listOf(leg)))
+
+        val result = service.getRoute(originLat, originLng, destLat, destLng, mode = "drive")
+
+        assertEquals(encodePolyline(leg), result.polyline)
     }
 }
