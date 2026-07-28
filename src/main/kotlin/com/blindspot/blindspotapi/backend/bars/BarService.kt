@@ -41,7 +41,7 @@ class BarService(
             id = place.id,
             name = place.displayName?.text ?: "Unknown",
             description = place.editorialSummary?.text,
-            category = place.types?.firstOrNull() ?: "",
+            category = place.types?.firstOrNull() ?: "bar",
             latitude = location.latitude,
             longitude = location.longitude,
             imageUrl = null,

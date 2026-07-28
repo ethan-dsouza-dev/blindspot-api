@@ -42,12 +42,9 @@ class GooglePlacesClient(
         )
 
         return googlePlacesRestClient.post()
-            .uri { builder ->
-                builder.path(SEARCH_NEARBY_PATH)
-                    .queryParam("key", properties.apiKey)
-                    .build()
-            }
+            .uri(SEARCH_NEARBY_PATH)
             .contentType(MediaType.APPLICATION_JSON)
+            .header("X-Goog-Api-Key", properties.apiKey)
             .header("X-Goog-FieldMask", FIELD_MASK)
             .body(request)
             .retrieve()
