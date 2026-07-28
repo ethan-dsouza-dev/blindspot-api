@@ -14,6 +14,25 @@ class RoutingController(
     private val routingService: RoutingService,
 ) {
 
+    companion object {
+        private val VALID_MODES = setOf(
+            "walk",
+            "hike",
+            "scooter",
+            "motorcycle",
+            "drive",
+            "light_truck",
+            "medium_truck",
+            "truck",
+            "bicycle",
+            "mountain_bike",
+            "road_bike",
+            "bus",
+            "transit",
+            "approximated_transit",
+        )
+    }
+
     @GetMapping("/route")
     fun route(
         @RequestParam originLat: Double,
@@ -24,6 +43,9 @@ class RoutingController(
     ): RouteResponse {
         validateLatLng(originLat, originLng)
         validateLatLng(destLat, destLng)
+        if (mode !in VALID_MODES) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "mode must be one of $VALID_MODES")
+        }
 
         return routingService.getRoute(originLat, originLng, destLat, destLng, mode)
     }
