@@ -10,6 +10,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import com.blindspot.blindspotapi.backend.auth.JwtService
 
 @WebMvcTest(PlacesNearbyController::class)
 class PlaceControllerTest {
@@ -19,6 +20,9 @@ class PlaceControllerTest {
 
     @MockitoBean
     lateinit var barService: BarService
+
+    @MockitoBean
+    lateinit var jwtService: JwtService
 
     @Test
     fun `returns nearby bars as json`() {
