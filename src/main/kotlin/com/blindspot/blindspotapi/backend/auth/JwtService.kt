@@ -5,6 +5,7 @@ import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -22,10 +23,12 @@ import javax.crypto.SecretKey
 class JwtService(
     private val jwtProperties: JwtProperties,
 ) {
+    private val logger = LoggerFactory.getLogger(this::class.java)
     private val signingKey: SecretKey
 
     init {
         val secret = jwtProperties.signingSecret
+        logger.info("Initializing JwtService with access token TTL={} minutes", jwtProperties.accessTokenTtlMinutes)
         require(secret.length >= 32) {
             "auth.jwt.signing-secret (JWT_SIGNING_SECRET) must be set to a string of at least 32 characters"
         }
@@ -46,6 +49,7 @@ class JwtService(
             .signWith(signingKey)
             .compact()
 
+        logger.info("Generated access token for userId={}", userId)
         return AccessToken(token, ttl * 60)
     }
 
@@ -58,12 +62,17 @@ class JwtService(
                 .parseSignedClaims(token)
                 .payload
 
-            return UUID.fromString(claims.subject)
+            val userId = UUID.fromString(claims.subject)
+            logger.debug("Validated access token for userId={}", userId)
+            return userId
         } catch (e: ExpiredJwtException) {
+            logger.warn("Access token expired: {}", e.message)
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Access token expired")
         } catch (e: JwtException) {
+            logger.warn("Invalid access token: {}", e.message)
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid access token")
         } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid access token format: {}", e.message)
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid access token")
         }
     }

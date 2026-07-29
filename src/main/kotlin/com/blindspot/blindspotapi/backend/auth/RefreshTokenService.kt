@@ -4,6 +4,7 @@ import com.blindspot.blindspotapi.backend.auth.config.JwtProperties
 import com.blindspot.blindspotapi.backend.auth.entity.RefreshTokenEntity
 import com.blindspot.blindspotapi.backend.auth.entity.UserEntity
 import com.blindspot.blindspotapi.backend.auth.repository.RefreshTokenRepository
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -25,6 +26,7 @@ class RefreshTokenService(
     private val refreshTokenRepository: RefreshTokenRepository,
     private val jwtProperties: JwtProperties,
 ) {
+    private val logger = LoggerFactory.getLogger(this::class.java)
     private val secureRandom = SecureRandom()
 
     data class IssuedRefreshToken(val rawToken: String, val expiresAt: Instant)
@@ -42,6 +44,7 @@ class RefreshTokenService(
             ),
         )
 
+        logger.info("Issued refresh token for userId={}, tokenId={}", user.id, saved.id)
         enforceCap(user, saved.id)
         return IssuedRefreshToken(rawToken, expiresAt)
     }
@@ -52,15 +55,20 @@ class RefreshTokenService(
      */
     @Transactional
     fun consume(rawToken: String): UserEntity {
-        val entity = refreshTokenRepository.findByTokenHash(hash(rawToken))
-            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token")
+        val tokenHash = hash(rawToken)
+        val entity = refreshTokenRepository.findByTokenHash(tokenHash)
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token").also {
+                logger.warn("Refresh token not found in database")
+            }
 
         if (!entity.isValid()) {
+            logger.warn("Refresh token is expired or already revoked for userId={}", entity.user.id)
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expired or revoked")
         }
 
         entity.revokedAt = Instant.now()
         refreshTokenRepository.save(entity)
+        logger.info("Consumed refresh token for userId={}, tokenId={}", entity.user.id, entity.id)
 
         return entity.user
     }
