@@ -9,6 +9,7 @@ data class JwtProperties(
     val signingSecret: String = "",
     val accessTokenTtlMinutes: Long = 15,
     val refreshTokenTtlDays: Long = 30,
+    val maxActiveRefreshTokensPerUser: Long = 5,
 )
 
 @ConfigurationProperties(prefix = "auth.google")

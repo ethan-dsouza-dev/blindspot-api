@@ -13,6 +13,7 @@ import java.security.SecureRandom
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Base64
+import java.util.UUID
 
 /**
  * Generates opaque refresh tokens and persists only their SHA-256 hash, so a database leak never
@@ -33,7 +34,7 @@ class RefreshTokenService(
         val rawToken = generateRawToken()
         val expiresAt = Instant.now().plus(jwtProperties.refreshTokenTtlDays, ChronoUnit.DAYS)
 
-        refreshTokenRepository.save(
+        val saved = refreshTokenRepository.save(
             RefreshTokenEntity(
                 user = user,
                 tokenHash = hash(rawToken),
@@ -41,6 +42,7 @@ class RefreshTokenService(
             ),
         )
 
+        enforceCap(user, saved.id)
         return IssuedRefreshToken(rawToken, expiresAt)
     }
 
@@ -61,6 +63,20 @@ class RefreshTokenService(
         refreshTokenRepository.save(entity)
 
         return entity.user
+    }
+
+    private fun enforceCap(user: UserEntity, currentTokenId: UUID) {
+        val max = jwtProperties.maxActiveRefreshTokensPerUser.toInt()
+        if (max <= 0) return
+
+        val active = refreshTokenRepository.findActiveByUser(user, Instant.now())
+        val overflow = active.size - max
+        if (overflow <= 0) return
+
+        val toDelete = active.filter { it.id != currentTokenId }.take(overflow)
+        if (toDelete.isNotEmpty()) {
+            refreshTokenRepository.deleteAll(toDelete)
+        }
     }
 
     private fun generateRawToken(): String {
