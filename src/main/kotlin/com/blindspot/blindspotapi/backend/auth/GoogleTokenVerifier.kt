@@ -8,6 +8,8 @@ import com.google.api.client.json.gson.GsonFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ResponseStatusException
+import java.io.IOException
+import java.security.GeneralSecurityException
 
 /**
  * Verified identity extracted from a Google-issued ID token.
@@ -46,7 +48,23 @@ class GoogleTokenVerifier(
                 "Google sign-in is not configured (missing GOOGLE_OAUTH_WEB_CLIENT_ID)",
             )
 
-        val idToken: GoogleIdToken = verifier.verify(idTokenString)
+        val verifiedIdToken: GoogleIdToken? = try {
+            verifier.verify(idTokenString)
+        } catch (e: IOException) {
+            throw ResponseStatusException(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Google public key endpoint is unreachable",
+                e,
+            )
+        } catch (e: GeneralSecurityException) {
+            throw ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Google ID token could not be verified",
+                e,
+            )
+        }
+
+        val idToken = verifiedIdToken
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Google ID token")
 
         val payload = idToken.payload
