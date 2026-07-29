@@ -10,6 +10,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import com.blindspot.blindspotapi.backend.auth.JwtService
 
 @WebMvcTest(RoutingController::class)
 class RoutingControllerTest {
@@ -19,6 +20,9 @@ class RoutingControllerTest {
 
     @MockitoBean
     lateinit var routingService: RoutingService
+
+    @MockitoBean
+    lateinit var jwtService: JwtService
 
     @Test
     fun `returns route as json`() {
