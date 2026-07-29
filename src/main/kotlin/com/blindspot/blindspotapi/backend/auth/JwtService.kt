@@ -22,12 +22,14 @@ import javax.crypto.SecretKey
 class JwtService(
     private val jwtProperties: JwtProperties,
 ) {
-    private val signingKey: SecretKey by lazy {
+    private val signingKey: SecretKey
+
+    init {
         val secret = jwtProperties.signingSecret
         require(secret.length >= 32) {
             "auth.jwt.signing-secret (JWT_SIGNING_SECRET) must be set to a string of at least 32 characters"
         }
-        Keys.hmacShaKeyFor(secret.toByteArray())
+        signingKey = Keys.hmacShaKeyFor(secret.toByteArray())
     }
 
     data class AccessToken(val token: String, val expiresInSeconds: Long)
