@@ -24,7 +24,7 @@ class GooglePlacesClient(
         private const val MAX_RESULT_COUNT = 20
     }
 
-    fun searchNearbyBars(
+    fun searchNearbyPlaces(
         latitude: Double,
         longitude: Double,
         radiusMeters: Double,
