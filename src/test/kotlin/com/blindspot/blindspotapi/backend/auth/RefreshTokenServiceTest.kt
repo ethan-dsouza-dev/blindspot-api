@@ -38,4 +38,49 @@ class RefreshTokenServiceTest {
         verify(repository).deleteAll(deletedCaptor.capture())
         assertEquals(listOf("hash1", "hash2"), deletedCaptor.firstValue.toList().map { it.tokenHash })
     }
+
+    @Test
+    fun `revoke marks active token as revoked`() {
+        val user = UserEntity(googleSub = "sub", email = "a@b.com")
+        val now = Instant.now()
+        val entity = RefreshTokenEntity(
+            user = user,
+            tokenHash = "hash",
+            expiresAt = now.plusSeconds(3600),
+        )
+
+        whenever(repository.findByTokenHash(any())).thenReturn(entity)
+        whenever(repository.save(entity)).thenAnswer { entity }
+
+        service.revoke("raw")
+
+        assert(entity.revokedAt != null)
+        verify(repository).save(entity)
+    }
+
+    @Test
+    fun `revoke silently ignores unknown token`() {
+        whenever(repository.findByTokenHash(any())).thenReturn(null)
+
+        service.revoke("raw")
+
+        verify(repository, never()).save(any())
+    }
+
+    @Test
+    fun `revoke silently ignores already revoked token`() {
+        val user = UserEntity(googleSub = "sub", email = "a@b.com")
+        val entity = RefreshTokenEntity(
+            user = user,
+            tokenHash = "hash",
+            expiresAt = Instant.now().plusSeconds(3600),
+            revokedAt = Instant.now().minusSeconds(1),
+        )
+
+        whenever(repository.findByTokenHash(any())).thenReturn(entity)
+
+        service.revoke("raw")
+
+        verify(repository, never()).save(any())
+    }
 }
