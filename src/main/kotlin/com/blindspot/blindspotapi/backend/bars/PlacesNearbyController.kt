@@ -54,5 +54,8 @@ class PlacesNearbyController(
         if (radius <= 0.0) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "radius must be greater than 0")
         }
+        if (radius > 50_000.0) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "radius must not exceed 50000 metres")
+        }
     }
 }
