@@ -29,11 +29,12 @@ class GooglePlacesClient(
         longitude: Double,
         radiusMeters: Double,
         types: List<String> = listOf("bar"),
+        rankPreference: String = "POPULARITY",
     ): SearchNearbyResponse {
         val request = SearchNearbyRequest(
             includedTypes = types,
             maxResultCount = MAX_RESULT_COUNT,
-            rankPreference = "POPULARITY",
+            rankPreference = rankPreference,
             locationRestriction = LocationRestriction(
                 circle = Circle(
                     center = LatLng(latitude = latitude, longitude = longitude),

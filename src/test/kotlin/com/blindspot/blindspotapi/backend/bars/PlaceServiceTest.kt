@@ -45,7 +45,7 @@ class PlaceServiceTest {
             types = listOf("bar"),
         )
 
-        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+        `when`(client.searchNearbyPlaces(originLat, originLng, 1500.0))
             .thenReturn(SearchNearbyResponse(places = listOf(far, near)))
 
         val result = service.findNearbyBars(originLat, originLng, 1500.0)
@@ -69,7 +69,7 @@ class PlaceServiceTest {
             location = null,
         )
 
-        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+        `when`(client.searchNearbyPlaces(originLat, originLng, 1500.0))
             .thenReturn(SearchNearbyResponse(places = listOf(noLocation)))
 
         val result = service.findNearbyBars(originLat, originLng, 1500.0)
@@ -88,7 +88,7 @@ class PlaceServiceTest {
             editorialSummary = null,
         )
 
-        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+        `when`(client.searchNearbyPlaces(originLat, originLng, 1500.0))
             .thenReturn(SearchNearbyResponse(places = listOf(sparse)))
 
         val bar = service.findNearbyBars(originLat, originLng, 1500.0).single()
@@ -117,7 +117,7 @@ class PlaceServiceTest {
             types = listOf("bar"),
         )
 
-        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+        `when`(client.searchNearbyPlaces(originLat, originLng, 1500.0))
             .thenReturn(SearchNearbyResponse(places = listOf(pricey, cheap)))
 
         val result = service.findNearbyBars(originLat, originLng, 1500.0, priceLevel = 1)
@@ -142,7 +142,7 @@ class PlaceServiceTest {
             types = listOf("bar"),
         )
 
-        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+        `when`(client.searchNearbyPlaces(originLat, originLng, 1500.0))
             .thenReturn(SearchNearbyResponse(places = listOf(pricey, cheap)))
 
         val result = service.findNearbyBars(originLat, originLng, 1500.0)
@@ -169,7 +169,7 @@ class PlaceServiceTest {
             types = listOf("pub"),
         )
 
-        `when`(client.searchNearbyBars(eq(originLat), eq(originLng), eq(5000.0), any()))
+        `when`(client.searchNearbyPlaces(eq(originLat), eq(originLng), eq(5000.0), any(), eq("DISTANCE")))
             .thenReturn(SearchNearbyResponse(places = listOf(lowReviews, highReviews)))
 
         val result = service.findTrendingPlaces(originLat, originLng, 5000.0)
@@ -196,7 +196,7 @@ class PlaceServiceTest {
             types = listOf("bar"),
         )
 
-        `when`(client.searchNearbyBars(eq(originLat), eq(originLng), eq(5000.0), any()))
+        `when`(client.searchNearbyPlaces(eq(originLat), eq(originLng), eq(5000.0), any(), eq("DISTANCE")))
             .thenReturn(SearchNearbyResponse(places = listOf(noReviews, withReviews)))
 
         val result = service.findTrendingPlaces(originLat, originLng, 5000.0)
@@ -216,14 +216,15 @@ class PlaceServiceTest {
             types = listOf("bar"),
         )
 
-        `when`(client.searchNearbyBars(eq(originLat), eq(originLng), eq(5000.0), any()))
+        `when`(client.searchNearbyPlaces(eq(originLat), eq(originLng), eq(5000.0), any(), eq("DISTANCE")))
             .thenReturn(SearchNearbyResponse(places = listOf(single)))
 
         service.findTrendingPlaces(originLat, originLng, 5000.0)
 
-        verify(client).searchNearbyBars(
+        verify(client).searchNearbyPlaces(
             eq(originLat), eq(originLng), eq(5000.0),
             eq(listOf("bar", "night_club", "restaurant", "cafe", "pub")),
+            eq("DISTANCE"),
         )
     }
 }

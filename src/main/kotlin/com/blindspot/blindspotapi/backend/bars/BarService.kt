@@ -41,7 +41,7 @@ class BarService(
         longitude: Double,
         radiusMeters: Double,
     ): List<Place> {
-        val response = googlePlacesClient.searchNearbyPlaces(latitude, longitude, radiusMeters, TRENDING_TYPES)
+        val response = googlePlacesClient.searchNearbyPlaces(latitude, longitude, radiusMeters, TRENDING_TYPES, "DISTANCE")
 
         return response.places
             .mapNotNull { place -> toPlace(place, latitude, longitude) }
