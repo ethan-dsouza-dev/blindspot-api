@@ -73,6 +73,29 @@ class RefreshTokenService(
         return entity.user
     }
 
+    /**
+     * Revokes a single refresh token for a sign-out request. Invalid or unknown tokens are ignored
+     * so the operation is idempotent and does not leak whether a token ever existed.
+     */
+    @Transactional
+    fun revoke(rawToken: String) {
+        val tokenHash = hash(rawToken)
+        val entity = refreshTokenRepository.findByTokenHash(tokenHash)
+        if (entity == null) {
+            logger.info("Sign-out request for unknown refresh token; ignoring")
+            return
+        }
+
+        if (!entity.isValid()) {
+            logger.info("Sign-out request for already expired/revoked token for userId={}; ignoring", entity.user.id)
+            return
+        }
+
+        entity.revokedAt = Instant.now()
+        refreshTokenRepository.save(entity)
+        logger.info("Revoked refresh token for userId={}, tokenId={}", entity.user.id, entity.id)
+    }
+
     private fun enforceCap(user: UserEntity, currentTokenId: UUID) {
         val max = jwtProperties.maxActiveRefreshTokensPerUser.toInt()
         if (max <= 0) return

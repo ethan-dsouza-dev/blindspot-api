@@ -3,6 +3,8 @@ package com.blindspot.blindspotapi.backend.auth
 import com.blindspot.blindspotapi.backend.auth.dto.AuthResponse
 import com.blindspot.blindspotapi.backend.auth.dto.GoogleSignInRequest
 import com.blindspot.blindspotapi.backend.auth.dto.RefreshRequest
+import com.blindspot.blindspotapi.backend.auth.dto.SignOutRequest
+import org.springframework.http.ResponseEntity
 import com.blindspot.blindspotapi.backend.auth.dto.UserDto
 import com.blindspot.blindspotapi.backend.auth.entity.UserEntity
 import org.slf4j.LoggerFactory
@@ -36,6 +38,13 @@ class AuthController(
         val user = refreshTokenService.consume(request.refreshToken)
         logger.info("Issuing refreshed token pair for userId={}", user.id)
         return issueTokenPair(user)
+    }
+
+    @PostMapping("/sign-out")
+    fun signOut(@RequestBody request: SignOutRequest): ResponseEntity<Unit> {
+        logger.info("Received sign-out request")
+        refreshTokenService.revoke(request.refreshToken)
+        return ResponseEntity.noContent().build()
     }
 
     private fun issueTokenPair(user: UserEntity): AuthResponse {
