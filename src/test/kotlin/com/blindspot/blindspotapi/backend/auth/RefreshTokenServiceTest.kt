@@ -73,7 +73,8 @@ class RefreshTokenServiceTest {
         val entity = RefreshTokenEntity(
             user = user,
             tokenHash = "hash",
-            expiresAt = Instant.now().minusSeconds(1),
+            expiresAt = Instant.now().plusSeconds(3600),
+            revokedAt = Instant.now().minusSeconds(1),
         )
 
         whenever(repository.findByTokenHash(any())).thenReturn(entity)
