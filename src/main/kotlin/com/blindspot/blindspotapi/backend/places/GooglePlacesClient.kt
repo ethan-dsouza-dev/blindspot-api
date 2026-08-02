@@ -20,19 +20,21 @@ class GooglePlacesClient(
     companion object {
         private const val SEARCH_NEARBY_PATH = "/v1/places:searchNearby"
         private const val FIELD_MASK =
-            "places.id,places.displayName,places.location,places.rating,places.priceLevel,places.editorialSummary,places.types,places.photos"
+            "places.id,places.displayName,places.location,places.rating,places.priceLevel,places.userRatingCount,places.editorialSummary,places.types,places.photos"
         private const val MAX_RESULT_COUNT = 20
     }
 
-    fun searchNearbyBars(
+    fun searchNearbyPlaces(
         latitude: Double,
         longitude: Double,
         radiusMeters: Double,
+        types: List<String> = listOf("bar"),
+        rankPreference: String = "POPULARITY",
     ): SearchNearbyResponse {
         val request = SearchNearbyRequest(
-            includedTypes = listOf("bar"),
+            includedTypes = types,
             maxResultCount = MAX_RESULT_COUNT,
-            rankPreference = "POPULARITY",
+            rankPreference = rankPreference,
             locationRestriction = LocationRestriction(
                 circle = Circle(
                     center = LatLng(latitude = latitude, longitude = longitude),

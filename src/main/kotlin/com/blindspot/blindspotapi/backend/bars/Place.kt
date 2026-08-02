@@ -30,6 +30,9 @@ data class Place(
     @JsonProperty("price_level")
     val priceLevel: Int? = null,
 
+    @JsonProperty("review_count")
+    val reviewCount: Int? = null,
+
     @JsonProperty("distance_meters")
     val distanceMeters: Double,
 )

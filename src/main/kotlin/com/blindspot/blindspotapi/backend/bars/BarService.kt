@@ -18,6 +18,8 @@ class BarService(
             "PRICE_LEVEL_EXPENSIVE" to 3,
             "PRICE_LEVEL_VERY_EXPENSIVE" to 4,
         )
+
+        private val TRENDING_TYPES = listOf("bar", "night_club", "restaurant", "cafe", "pub")
     }
 
     fun findNearbyBars(
@@ -26,15 +28,27 @@ class BarService(
         radiusMeters: Double,
         priceLevel: Int? = null,
     ): List<Place> {
-        val response = googlePlacesClient.searchNearbyBars(latitude, longitude, radiusMeters)
+        val response = googlePlacesClient.searchNearbyPlaces(latitude, longitude, radiusMeters)
 
         return response.places
-            .mapNotNull { place -> toBar(place, latitude, longitude) }
+            .mapNotNull { place -> toPlace(place, latitude, longitude) }
             .filter { priceLevel == null || it.priceLevel == priceLevel }
             .sortedBy { it.distanceMeters }
     }
 
-    private fun toBar(place: PlaceResult, originLat: Double, originLng: Double): Place? {
+    fun findTrendingPlaces(
+        latitude: Double,
+        longitude: Double,
+        radiusMeters: Double,
+    ): List<Place> {
+        val response = googlePlacesClient.searchNearbyPlaces(latitude, longitude, radiusMeters, TRENDING_TYPES, "DISTANCE")
+
+        return response.places
+            .mapNotNull { place -> toPlace(place, latitude, longitude) }
+            .sortedByDescending { it.reviewCount ?: 0 }
+    }
+
+    private fun toPlace(place: PlaceResult, originLat: Double, originLng: Double): Place? {
         val location = place.location ?: return null
 
         return Place(
@@ -47,6 +61,7 @@ class BarService(
             imageUrl = null,
             rating = place.rating,
             priceLevel = place.priceLevel?.let { PRICE_LEVELS[it] },
+            reviewCount = place.userRatingCount,
             distanceMeters = haversineMeters(originLat, originLng, location.latitude, location.longitude),
         )
     }

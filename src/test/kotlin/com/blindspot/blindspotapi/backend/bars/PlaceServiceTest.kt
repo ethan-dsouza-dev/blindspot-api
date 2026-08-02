@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.verify
 
 class PlaceServiceTest {
 
@@ -42,7 +45,7 @@ class PlaceServiceTest {
             types = listOf("bar"),
         )
 
-        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+        `when`(client.searchNearbyPlaces(originLat, originLng, 1500.0))
             .thenReturn(SearchNearbyResponse(places = listOf(far, near)))
 
         val result = service.findNearbyBars(originLat, originLng, 1500.0)
@@ -66,7 +69,7 @@ class PlaceServiceTest {
             location = null,
         )
 
-        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+        `when`(client.searchNearbyPlaces(originLat, originLng, 1500.0))
             .thenReturn(SearchNearbyResponse(places = listOf(noLocation)))
 
         val result = service.findNearbyBars(originLat, originLng, 1500.0)
@@ -85,7 +88,7 @@ class PlaceServiceTest {
             editorialSummary = null,
         )
 
-        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+        `when`(client.searchNearbyPlaces(originLat, originLng, 1500.0))
             .thenReturn(SearchNearbyResponse(places = listOf(sparse)))
 
         val bar = service.findNearbyBars(originLat, originLng, 1500.0).single()
@@ -114,7 +117,7 @@ class PlaceServiceTest {
             types = listOf("bar"),
         )
 
-        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+        `when`(client.searchNearbyPlaces(originLat, originLng, 1500.0))
             .thenReturn(SearchNearbyResponse(places = listOf(pricey, cheap)))
 
         val result = service.findNearbyBars(originLat, originLng, 1500.0, priceLevel = 1)
@@ -139,11 +142,89 @@ class PlaceServiceTest {
             types = listOf("bar"),
         )
 
-        `when`(client.searchNearbyBars(originLat, originLng, 1500.0))
+        `when`(client.searchNearbyPlaces(originLat, originLng, 1500.0))
             .thenReturn(SearchNearbyResponse(places = listOf(pricey, cheap)))
 
         val result = service.findNearbyBars(originLat, originLng, 1500.0)
 
         assertEquals(listOf("cheap", "pricey"), result.map { it.id })
+    }
+
+    @Test
+    fun `trending sorts places by review count descending`() {
+        val lowReviews = PlaceResult(
+            id = "low",
+            displayName = LocalizedText(text = "New Cafe"),
+            location = LatLng(latitude = 37.8049, longitude = -122.4194),
+            rating = 4.0,
+            userRatingCount = 5,
+            types = listOf("cafe"),
+        )
+        val highReviews = PlaceResult(
+            id = "high",
+            displayName = LocalizedText(text = "Popular Pub"),
+            location = LatLng(latitude = 37.7750, longitude = -122.4194),
+            rating = 4.5,
+            userRatingCount = 500,
+            types = listOf("pub"),
+        )
+
+        `when`(client.searchNearbyPlaces(eq(originLat), eq(originLng), eq(5000.0), any(), eq("DISTANCE")))
+            .thenReturn(SearchNearbyResponse(places = listOf(lowReviews, highReviews)))
+
+        val result = service.findTrendingPlaces(originLat, originLng, 5000.0)
+
+        assertEquals(listOf("high", "low"), result.map { it.id })
+        assertEquals(500, result[0].reviewCount)
+        assertEquals(5, result[1].reviewCount)
+    }
+
+    @Test
+    fun `trending treats missing review count as zero so it sorts last`() {
+        val noReviews = PlaceResult(
+            id = "no-reviews",
+            displayName = LocalizedText(text = "Hidden Spot"),
+            location = LatLng(latitude = 37.8049, longitude = -122.4194),
+            userRatingCount = null,
+            types = listOf("bar"),
+        )
+        val withReviews = PlaceResult(
+            id = "reviewed",
+            displayName = LocalizedText(text = "Busy Bar"),
+            location = LatLng(latitude = 37.7750, longitude = -122.4194),
+            userRatingCount = 42,
+            types = listOf("bar"),
+        )
+
+        `when`(client.searchNearbyPlaces(eq(originLat), eq(originLng), eq(5000.0), any(), eq("DISTANCE")))
+            .thenReturn(SearchNearbyResponse(places = listOf(noReviews, withReviews)))
+
+        val result = service.findTrendingPlaces(originLat, originLng, 5000.0)
+
+        assertEquals(listOf("reviewed", "no-reviews"), result.map { it.id })
+        assertEquals(42, result[0].reviewCount)
+        assertNull(result[1].reviewCount)
+    }
+
+    @Test
+    fun `trending calls the places client with the trending type list`() {
+        val single = PlaceResult(
+            id = "only",
+            displayName = LocalizedText(text = "Solo Bar"),
+            location = LatLng(latitude = 37.7749, longitude = -122.4194),
+            userRatingCount = 10,
+            types = listOf("bar"),
+        )
+
+        `when`(client.searchNearbyPlaces(eq(originLat), eq(originLng), eq(5000.0), any(), eq("DISTANCE")))
+            .thenReturn(SearchNearbyResponse(places = listOf(single)))
+
+        service.findTrendingPlaces(originLat, originLng, 5000.0)
+
+        verify(client).searchNearbyPlaces(
+            eq(originLat), eq(originLng), eq(5000.0),
+            eq(listOf("bar", "night_club", "restaurant", "cafe", "pub")),
+            eq("DISTANCE"),
+        )
     }
 }
