@@ -35,8 +35,10 @@ class JwtAuthenticationFilter(
                 log.debug("Authenticated request for userId={} on {}", userId, request.requestURI)
                 val authentication = UsernamePasswordAuthenticationToken(userId, null, emptyList())
                 SecurityContextHolder.getContext().authentication = authentication
-            } else {
+            } else if (userId == null) {
                 log.warn("Bearer token present but failed validation on {}", request.requestURI)
+            } else {
+                log.debug("Bearer token valid but authentication already set on {}", request.requestURI)
             }
         } else {
             log.debug("No Bearer token in Authorization header for {}", request.requestURI)
