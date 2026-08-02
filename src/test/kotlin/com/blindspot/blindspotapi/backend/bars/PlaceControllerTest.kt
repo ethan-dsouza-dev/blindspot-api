@@ -96,4 +96,80 @@ class PlaceControllerTest {
             status { isBadRequest() }
         }
     }
+
+    @Test
+    fun `returns trending places as json with default 5000m radius`() {
+        whenever(barService.findTrendingPlaces(eq(37.7749), eq(-122.4194), eq(5000.0)))
+            .thenReturn(
+                listOf(
+                    Place(
+                        id = "trending-1",
+                        name = "Popular Pub",
+                        latitude = 37.775,
+                        longitude = -122.4194,
+                        description = "The place to be",
+                        rating = 4.7,
+                        priceLevel = 2,
+                        reviewCount = 842,
+                        distanceMeters = 610.0,
+                    ),
+                ),
+            )
+
+        mockMvc.get("/bars/trending") {
+            param("lat", "37.7749")
+            param("lng", "-122.4194")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$[0].id") { value("trending-1") }
+            jsonPath("$[0].name") { value("Popular Pub") }
+            jsonPath("$[0].review_count") { value(842) }
+            jsonPath("$[0].price_level") { value(2) }
+            jsonPath("$[0].distance_meters") { value(610.0) }
+        }
+    }
+
+    @Test
+    fun `trending uses custom radius when provided`() {
+        whenever(barService.findTrendingPlaces(eq(37.7749), eq(-122.4194), eq(2000.0)))
+            .thenReturn(emptyList())
+
+        mockMvc.get("/bars/trending") {
+            param("lat", "37.7749")
+            param("lng", "-122.4194")
+            param("radius", "2000")
+        }.andExpect {
+            status { isOk() }
+        }
+    }
+
+    @Test
+    fun `trending returns 400 when lat is missing`() {
+        mockMvc.get("/bars/trending") {
+            param("lng", "-122.4194")
+        }.andExpect {
+            status { isBadRequest() }
+        }
+    }
+
+    @Test
+    fun `trending returns 400 when lat is out of range`() {
+        mockMvc.get("/bars/trending") {
+            param("lat", "100.0")
+            param("lng", "-122.4194")
+        }.andExpect {
+            status { isBadRequest() }
+        }
+    }
+
+    @Test
+    fun `trending returns 400 when radius is not positive`() {
+        mockMvc.get("/bars/trending") {
+            param("lat", "37.7749")
+            param("lng", "-122.4194")
+            param("radius", "-100")
+        }.andExpect {
+            status { isBadRequest() }
+        }
+    }
 }

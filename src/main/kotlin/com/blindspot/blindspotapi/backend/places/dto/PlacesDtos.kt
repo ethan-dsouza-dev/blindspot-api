@@ -35,6 +35,7 @@ data class PlaceResult(
     val location: LatLng? = null,
     val rating: Double? = null,
     val priceLevel: String? = null,
+    val userRatingCount: Int? = null,
     val editorialSummary: LocalizedText? = null,
     val types: List<String>? = null,
     val photos: List<Photo>? = null,
