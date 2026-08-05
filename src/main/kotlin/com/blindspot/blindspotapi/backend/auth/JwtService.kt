@@ -6,6 +6,7 @@ import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Lazy
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -18,8 +19,12 @@ import javax.crypto.SecretKey
  * Issues and validates short-lived access JWTs signed with a symmetric secret
  * (`auth.jwt.signing-secret` / `JWT_SIGNING_SECRET`). Refresh tokens are handled separately by
  * [RefreshTokenService] and are opaque, DB-backed values rather than JWTs.
+ *
+ * Eagerly initialized (`@Lazy(false)`) despite global lazy init so that the signing-secret
+ * validation below remains fail-fast at startup instead of deferring to the first auth request.
  */
 @Service
+@Lazy(false)
 class JwtService(
     private val jwtProperties: JwtProperties,
 ) {
