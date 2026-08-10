@@ -41,6 +41,15 @@ class PlacesNearbyController(
         return barService.findTrendingPlaces(lat, lng, radius)
     }
 
+    @GetMapping("/byIds")
+    fun byIds(@RequestParam ids: List<String>): List<Place> {
+        if (ids.isEmpty()) return emptyList()
+        if (ids.size > 50) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "ids must not exceed 50")
+        }
+        return barService.findByIds(ids)
+    }
+
     private fun validateLatLng(lat: Double, lng: Double) {
         if (lat < -90.0 || lat > 90.0) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "lat must be between -90 and 90")
