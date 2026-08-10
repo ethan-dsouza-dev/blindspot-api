@@ -4,6 +4,7 @@ import com.blindspot.blindspotapi.backend.config.GooglePlacesProperties
 import com.blindspot.blindspotapi.backend.places.dto.Circle
 import com.blindspot.blindspotapi.backend.places.dto.LatLng
 import com.blindspot.blindspotapi.backend.places.dto.LocationRestriction
+import com.blindspot.blindspotapi.backend.places.dto.PlaceResult
 import com.blindspot.blindspotapi.backend.places.dto.SearchNearbyRequest
 import com.blindspot.blindspotapi.backend.places.dto.SearchNearbyResponse
 import org.springframework.http.MediaType
@@ -52,5 +53,16 @@ class GooglePlacesClient(
             .retrieve()
             .body<SearchNearbyResponse>()
             ?: SearchNearbyResponse()
+    }
+
+    fun getPlaceDetails(placeId: String): PlaceResult? {
+        return runCatching {
+            googlePlacesRestClient.get()
+                .uri("/v1/places/{placeId}", placeId)
+                .header("X-Goog-Api-Key", properties.apiKey)
+                .header("X-Goog-FieldMask", FIELD_MASK)
+                .retrieve()
+                .body<PlaceResult>()
+        }.getOrNull()
     }
 }

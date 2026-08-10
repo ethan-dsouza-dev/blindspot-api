@@ -34,5 +34,5 @@ data class Place(
     val reviewCount: Int? = null,
 
     @JsonProperty("distance_meters")
-    val distanceMeters: Double,
+    val distanceMeters: Double? = null,
 )
