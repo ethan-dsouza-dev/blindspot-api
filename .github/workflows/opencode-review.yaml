@@ -27,5 +27,5 @@ jobs:
         with:
           agent: "pr-reviewer"
           model: "openrouter/poolside/laguna-xs-2.1:free"
-          # Instructs the runner to consume the diff and evaluate autonomously
-          args: "review-diff --base=${{ github.event.pull_request.base.sha }} --head=${{ github.event.pull_request.head.sha }}"
+          # Skip OpenCode App OIDC token exchange and use GITHUB_TOKEN directly
+          use_github_token: true
