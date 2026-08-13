@@ -7,6 +7,7 @@ import com.blindspot.blindspotapi.backend.places.dto.LocationRestriction
 import com.blindspot.blindspotapi.backend.places.dto.PlaceResult
 import com.blindspot.blindspotapi.backend.places.dto.SearchNearbyRequest
 import com.blindspot.blindspotapi.backend.places.dto.SearchNearbyResponse
+import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
@@ -17,6 +18,7 @@ class GooglePlacesClient(
     private val googlePlacesRestClient: RestClient,
     private val properties: GooglePlacesProperties,
 ) {
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     companion object {
         private const val SEARCH_NEARBY_PATH = "/v1/places:searchNearby"
@@ -56,13 +58,16 @@ class GooglePlacesClient(
     }
 
     fun getPlaceDetails(placeId: String): PlaceResult? {
-        return runCatching {
+        return try {
             googlePlacesRestClient.get()
                 .uri("/v1/places/{placeId}", placeId)
                 .header("X-Goog-Api-Key", properties.apiKey)
                 .header("X-Goog-FieldMask", FIELD_MASK)
                 .retrieve()
                 .body<PlaceResult>()
-        }.getOrNull()
+        } catch (e: Exception) {
+            logger.warn("Failed to fetch place details for placeId={}: {}", placeId, e.message)
+            null
+        }
     }
 }
