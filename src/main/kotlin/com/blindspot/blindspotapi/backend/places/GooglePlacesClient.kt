@@ -22,8 +22,17 @@ class GooglePlacesClient(
 
     companion object {
         private const val SEARCH_NEARBY_PATH = "/v1/places:searchNearby"
-        private const val FIELD_MASK =
+
+        // Nearby Search wraps results in a "places" array, so each field needs that prefix.
+        private const val SEARCH_FIELD_MASK =
             "places.id,places.displayName,places.location,places.rating,places.priceLevel,places.userRatingCount,places.editorialSummary,places.types,places.photos"
+
+        // Place Details returns a single object directly (no "places" wrapper), so field names
+        // must NOT be prefixed — using SEARCH_FIELD_MASK here causes a 400 INVALID_ARGUMENT from
+        // Google ("Cannot find matching fields for path 'places.id'").
+        private const val DETAILS_FIELD_MASK =
+            "id,displayName,location,rating,priceLevel,userRatingCount,editorialSummary,types,photos"
+
         private const val MAX_RESULT_COUNT = 20
     }
 
@@ -50,7 +59,7 @@ class GooglePlacesClient(
             .uri(SEARCH_NEARBY_PATH)
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Goog-Api-Key", properties.apiKey)
-            .header("X-Goog-FieldMask", FIELD_MASK)
+            .header("X-Goog-FieldMask", SEARCH_FIELD_MASK)
             .body(request)
             .retrieve()
             .body<SearchNearbyResponse>()
@@ -62,7 +71,7 @@ class GooglePlacesClient(
             googlePlacesRestClient.get()
                 .uri("/v1/places/{placeId}", placeId)
                 .header("X-Goog-Api-Key", properties.apiKey)
-                .header("X-Goog-FieldMask", FIELD_MASK)
+                .header("X-Goog-FieldMask", DETAILS_FIELD_MASK)
                 .retrieve()
                 .body<PlaceResult>()
         } catch (e: Exception) {
