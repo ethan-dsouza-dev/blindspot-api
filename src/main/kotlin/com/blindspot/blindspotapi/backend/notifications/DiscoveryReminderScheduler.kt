@@ -17,7 +17,7 @@ class DiscoveryReminderScheduler(
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    @Scheduled(cron = "0 0 18 * * *")
+    @Scheduled(cron = "0 0 */2 * * *")
     fun sendDailyReminders() {
         val users = userRepository.findAllByFcmTokenIsNotNull()
         logger.info("Sending discovery reminders to {} users", users.size)
