@@ -25,6 +25,9 @@ class UserEntity(
     @Column(name = "picture_url")
     var pictureUrl: String? = null,
 
+    @Column(name = "fcm_token")
+    var fcmToken: String? = null,
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now(),
 
