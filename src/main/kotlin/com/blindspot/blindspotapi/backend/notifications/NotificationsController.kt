@@ -2,6 +2,9 @@ package com.blindspot.blindspotapi.backend.notifications
 
 import com.blindspot.blindspotapi.backend.auth.repository.UserRepository
 import com.blindspot.blindspotapi.backend.notifications.dto.FcmTokenRequest
+import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.Message
+import com.google.firebase.messaging.Notification
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
@@ -35,6 +38,26 @@ class NotificationsController(
     fun unregisterToken(authentication: Authentication): ResponseEntity<Unit> {
         val user = userRepository.getReferenceById(authentication.userId())
         user.fcmToken = null
+        return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/test")
+    @Transactional
+    fun sendTestNotification(authentication: Authentication): ResponseEntity<Unit> {
+        val user = userRepository.getReferenceById(authentication.userId())
+        val fcmToken = user.fcmToken ?: return ResponseEntity.badRequest().build()
+
+        // Use Firebase Admin SDK to send a test push
+        val message = Message.builder()
+            .setToken(fcmToken)
+            .setNotification(
+                Notification.builder()
+                .setTitle("Test Notification")
+                .setBody("Push notifications are working!")
+                .build())
+            .build()
+
+        FirebaseMessaging.getInstance().send(message)
         return ResponseEntity.noContent().build()
     }
 
