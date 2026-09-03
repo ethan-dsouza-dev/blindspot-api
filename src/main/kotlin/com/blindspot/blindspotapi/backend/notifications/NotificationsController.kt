@@ -5,6 +5,8 @@ import com.blindspot.blindspotapi.backend.notifications.dto.FcmTokenRequest
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.Message
 import com.google.firebase.messaging.Notification
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
@@ -21,6 +23,7 @@ import java.util.UUID
 class NotificationsController(
     private val userRepository: UserRepository,
 ) {
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     @PostMapping("/fcm-token")
     @Transactional
@@ -47,17 +50,20 @@ class NotificationsController(
         val user = userRepository.getReferenceById(authentication.userId())
         val fcmToken = user.fcmToken ?: return ResponseEntity.badRequest().build()
 
+        logger.info("Sending test notification to user {} with FCM token {}", authentication.userId(), fcmToken.substring(0, 6) + "...")
+
         // Use Firebase Admin SDK to send a test push
         val message = Message.builder()
             .setToken(fcmToken)
             .setNotification(
                 Notification.builder()
-                .setTitle("Test Notification")
-                .setBody("Push notifications are working!")
-                .build())
+                    .setTitle("Test Notification")
+                    .setBody("Push notifications are working!")
+                    .build())
             .build()
 
         FirebaseMessaging.getInstance().send(message)
+        logger.info("Test notification sent successfully to user {}", authentication.userId())
         return ResponseEntity.noContent().build()
     }
 
