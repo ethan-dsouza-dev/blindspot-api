@@ -4,11 +4,17 @@ import com.blindspot.blindspotapi.backend.places.GooglePlacesClient
 import com.blindspot.blindspotapi.backend.places.dto.PlaceResult
 import com.blindspot.blindspotapi.backend.utils.haversineMeters
 import org.springframework.stereotype.Service
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 
 @Service
 class BarService(
     private val googlePlacesClient: GooglePlacesClient,
 ) {
+
+    // Bounded so a large ids list can't spawn unbounded threads; sized generously since these
+    // are short-lived I/O-bound calls to Google, not CPU work.
+    private val placeDetailsExecutor = Executors.newFixedThreadPool(10)
 
     companion object {
         private val PRICE_LEVELS = mapOf(
@@ -48,7 +54,19 @@ class BarService(
             .sortedByDescending { it.reviewCount ?: 0 }
     }
 
-    private fun toPlace(place: PlaceResult, originLat: Double, originLng: Double): Place? {
+    /** Fetches details for each id concurrently, so a favorites list of N places costs roughly
+     * one round trip's worth of latency rather than N sequential ones. */
+    fun findByIds(placeIds: List<String>): List<Place> {
+        val futures = placeIds.map { id ->
+            CompletableFuture.supplyAsync({ googlePlacesClient.getPlaceDetails(id) }, placeDetailsExecutor)
+        }
+
+        return futures
+            .map { it.join() }
+            .mapNotNull { result -> result?.let { toPlace(it, originLat = null, originLng = null) } }
+    }
+
+    private fun toPlace(place: PlaceResult, originLat: Double?, originLng: Double?): Place? {
         val location = place.location ?: return null
 
         return Place(
@@ -62,7 +80,9 @@ class BarService(
             rating = place.rating,
             priceLevel = place.priceLevel?.let { PRICE_LEVELS[it] },
             reviewCount = place.userRatingCount,
-            distanceMeters = haversineMeters(originLat, originLng, location.latitude, location.longitude),
+            distanceMeters = if (originLat != null && originLng != null) {
+                haversineMeters(originLat, originLng, location.latitude, location.longitude)
+            } else null,
         )
     }
 }
