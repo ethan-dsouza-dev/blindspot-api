@@ -1,6 +1,6 @@
 package com.blindspot.blindspotapi.backend.notifications
 
-import com.blindspot.blindspotapi.backend.auth.repository.UserRepository
+import com.blindspot.blindspotapi.backend.notifications.repository.FcmTokenRepository
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Lazy
 import org.springframework.scheduling.annotation.Scheduled
@@ -16,20 +16,19 @@ import org.springframework.stereotype.Component
 @Component
 @Lazy(false)
 class DiscoveryReminderScheduler(
-    private val userRepository: UserRepository,
+    private val fcmTokenRepository: FcmTokenRepository,
     private val notificationDispatchService: NotificationDispatchService,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     @Scheduled(cron = "0 */2 * * * *")
     fun sendDailyReminders() {
-        val users = userRepository.findAllByFcmTokenIsNotNull()
-        logger.info("Sending discovery reminders to {} users", users.size)
+        val tokens = fcmTokenRepository.findAll()
+        logger.info("Sending discovery reminders to {} devices", tokens.size)
 
-        users.forEach { user ->
-            val token = user.fcmToken ?: return@forEach
+        tokens.forEach { fcmToken ->
             notificationDispatchService.sendReminder(
-                fcmToken = token,
+                fcmToken = fcmToken.token,
                 title = "Haven't been out in a while?",
                 body = "Discover something new near you tonight.",
             )

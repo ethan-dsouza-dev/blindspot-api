@@ -1,4 +1,4 @@
-package com.blindspot.blindspotapi.backend.auth.entity
+package com.blindspot.blindspotapi.backend.notifications.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -8,22 +8,16 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(name = "users")
-class UserEntity(
+@Table(name = "fcm_tokens")
+class FcmTokenEntity(
     @Id
     val id: UUID = UUID.randomUUID(),
 
-    @Column(name = "google_sub", nullable = false, unique = true)
-    var googleSub: String,
+    @Column(name = "user_id", nullable = false)
+    var userId: UUID,
 
     @Column(nullable = false, unique = true)
-    var email: String,
-
-    @Column
-    var name: String? = null,
-
-    @Column(name = "picture_url")
-    var pictureUrl: String? = null,
+    var token: String,
 
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now(),

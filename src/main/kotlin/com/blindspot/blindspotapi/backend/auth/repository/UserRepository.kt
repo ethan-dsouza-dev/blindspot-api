@@ -7,5 +7,4 @@ import java.util.UUID
 interface UserRepository : JpaRepository<UserEntity, UUID> {
     fun findByGoogleSub(googleSub: String): UserEntity?
 
-    fun findAllByFcmTokenIsNotNull(): List<UserEntity>
 }
